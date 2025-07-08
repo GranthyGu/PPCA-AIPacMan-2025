@@ -24,10 +24,13 @@ class DeepQNetwork(Module):
         # Remember to set self.learning_rate, self.numTrainingGames,
         # and self.batch_size!
         "*** YOUR CODE HERE ***"
-        self.learning_rate = 0
-        self.numTrainingGames = 0
-        self.batch_size = 0
-
+        self.learning_rate = 0.001
+        self.numTrainingGames = 2000
+        self.batch_size = 32
+        self.fc1 = Linear(state_dim, 128)
+        self.fc2 = Linear(128, 128)
+        self.fc3 = Linear(128, action_dim)
+        self.optimizer = optim.Adam(self.parameters(), lr=self.learning_rate)
         "**END CODE"""
         self.double()
 
@@ -43,7 +46,11 @@ class DeepQNetwork(Module):
             loss node between Q predictions and Q_target
         """
         "*** YOUR CODE HERE ***"
-
+        states_tensor = tensor(states)
+        Q_target_tensor = tensor(Q_target)
+        Q_pred = self.forward(states_tensor)
+        loss = mse_loss(Q_pred, Q_target_tensor)
+        return loss
 
     def forward(self, states):
         """
@@ -59,7 +66,10 @@ class DeepQNetwork(Module):
                 scores, for each of the actions
         """
         "*** YOUR CODE HERE ***"
-
+        x = relu(self.fc1(states))
+        x = relu(self.fc2(x))
+        Q_values = self.fc3(x)
+        return Q_values
     
     def run(self, states):
         return self.forward(states)
@@ -78,3 +88,7 @@ class DeepQNetwork(Module):
             None
         """
         "*** YOUR CODE HERE ***"
+        self.optimizer.zero_grad()
+        loss = self.get_loss(states, Q_target)
+        loss.backward()
+        self.optimizer.step()
